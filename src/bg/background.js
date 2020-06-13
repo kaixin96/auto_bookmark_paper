@@ -51,7 +51,7 @@ function getHost(url){
 
 function AddBookmarks(url, title, authors, arxiv_id) {
     var ref = '[' + arxiv_id + ']';
-    var fullTitle = ref + ' - ' + title + " - " + authors.join(' and ');
+    var fullTitle = title + " - " + authors.join(' and ');
 
     getYearFolderId(arxiv_id, function (id) {
         AddBookmark(url, fullTitle, id);
