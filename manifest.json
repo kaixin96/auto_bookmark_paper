@@ -1,8 +1,8 @@
 {
-  "name": "Where's That Paper?",
-  "version": "1.0.1",
+  "name": "Arxiv Auto Bookmarker",
+  "version": "0.1",
   "manifest_version": 2,
-  "description": "Automatically adds viewed academic papers to your favorites.",
+  "description": "Automatically bookmarks viewed arxiv papers. Forked from https://github.com/eylonyogev/Where-s-That-Paper-",
   "default_locale": "en",
   "background": {
     "scripts": [
@@ -12,6 +12,11 @@
 	  "src/bg/background.js"
     ],
     "persistent": true
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
   },
   "permissions": [
     "http://*/*",

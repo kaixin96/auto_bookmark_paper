@@ -18,19 +18,7 @@ init();
 
 
 function init(){
-	// handlers['eprint.iacr.org'] = ePrintScraper;
 	handlers['arxiv.org'] = arxivScraper;
-	// handlers["eccc.weizmann.ac.il"] = ecccScraper;
-	// handlers['epubs.siam.org'] = siamScraper;
-	// handlers['research.microsoft.com'] = msrScraper;
-	// handlers['citeseerx.ist.psu.edu'] = citeseerxScraper;
-	// handlers['ac.els-cdn.com'] = sciencedirectScraper;
-	// handlers['www.sciencedirect.com'] = sciencedirectScraper;
-	// handlers['download.springer.com'] = springerScraper;
-	// handlers['link.springer.com'] = springerScraper;
-	// handlers['delivery.acm.org'] = acmScraper;
-	// handlers['proceedings.mlr.press'] = mlrScraper;
-	// handlers['journals.aps.org'] = apsScraper;
 }
 
 
@@ -124,10 +112,10 @@ function getYearFolderId(arxiv_id, callback) {
 
 function getPapersFolderId(callback){
 	console.log('new');
-	chrome.bookmarks.search("Papers", function(results) {
+	chrome.bookmarks.search("arxiv log", function(results) {
 		var found = false;
 		for (var i = 0; i < results.length; i++){
-			if (results[i].title == "Papers"){
+			if (results[i].title == "arxiv log"){
 				found = true;
 				var id = results[i].id;
 				callback(id);
@@ -136,7 +124,7 @@ function getPapersFolderId(callback){
 		if (!found){
 			chrome.bookmarks.create({
 				'parentId': '1',
-				'title': 'Papers'},
+				'title': 'arxiv log'},
 				function(newfolder){
 					console.log(newfolder);
 					callback(newfolder.id);
