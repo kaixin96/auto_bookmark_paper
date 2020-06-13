@@ -36,33 +36,33 @@ function bibtexParserString(url, bibtexString, options={}){
 }
 
 
-function metaParser(url, pageUrl, options={}){
-	if (options == null)
-		options = {};
-	
-	if (options['titleName'] == null)
-		options['titleName'] = 'citation_title';
-	if (options['authorsName'] == null)
-		options['authorsName'] = 'citation_author';
-	if (options['yearName'] == null)
-		options['yearName'] = 'citation_date';
-	
-	if (options['callback'] == null)
-		options['callback'] = AddBookmarks;
-	
-	getDom(pageUrl, function(dom){
-		var title = getElementByName(dom, 'meta', options['titleName'])[0].content;
-		var authorsHtml = getElementByName(dom, 'meta', options['authorsName']);
-		var authors = [];
-		for (var i = 0; i < authorsHtml.length; i++){
-			if (!authors.includes(authorsHtml[i]))
-				authors.push(authorsHtml[i].content);
-		}
-		
-		var year = getElementByName(dom, 'meta', options['yearName'])[0].content.substr(0,4);
-		
-		options['callback'](url, title, authors, year);
-	});
+function metaParser(url, pageUrl, options = {}) {
+    if (options == null)
+        options = {};
+
+    if (options['titleName'] == null)
+        options['titleName'] = 'citation_title';
+    if (options['authorsName'] == null)
+        options['authorsName'] = 'citation_author';
+    if (options['arxiv_id'] == null)
+        options['arxiv_id'] = 'citation_arxiv_id';
+
+    if (options['callback'] == null)
+        options['callback'] = AddBookmarks;
+
+    getDom(pageUrl, function (dom) {
+        var title = getElementByName(dom, 'meta', options['titleName'])[0].content;
+        var authorsHtml = getElementByName(dom, 'meta', options['authorsName']);
+        var authors = [];
+        for (var i = 0; i < authorsHtml.length; i++) {
+            if (!authors.includes(authorsHtml[i]))
+                authors.push(authorsHtml[i].content);
+        }
+
+        var arxiv_id = getElementByName(dom, 'meta', options['arxiv_id'])[0].content;
+
+        options['callback'](pageUrl, title, authors, arxiv_id);
+    });
 }
 
 function metaParserSingleAuthor(url, pageUrl, delimiter, options){
@@ -80,117 +80,12 @@ function metaParserSingleAuthor(url, pageUrl, delimiter, options){
 	metaParser(url, pageUrl, options);
 }
 
-function ePrintScraper(tab, url){
-	if (!url.endsWith('.pdf'))
-		return;
-	
-	var pageUrl = url.substr(0, url.length-4);
-	getDom(pageUrl, function(dom){
-		var title = cleanSpaces(dom.getElementsByTagName('b')[0].innerText);
-		var authorsStr = cleanSpaces(dom.getElementsByTagName('i')[0].innerText);
-		var authors = authorsStr.split(" and ");
-		var year = url.split('/')[3];
-		
-		AddBookmarks(url, title, authors, year);
-	});
-}
-
 function arxivScraper(tab, url){
 	if (!url.endsWith('.pdf'))
 		return;
 	
-	var pageUrl = url.replace('/pdf/','/abs/');
+    var pageUrl = url.replace('/pdf/', '/abs/').replace('.pdf', '');
 	metaParser(url, pageUrl);
-}
-
-function ecccScraper(tab, url){
-	if (url.indexOf('/report/') == -1)
-		return;
-	
-	getDom(url, function(dom){
-		var title = dom.getElementsByTagName('h4')[0].innerText;
-		var authorsHtml = getElementWithHref(dom, '/author/');
-		var authors = [];
-		for (var i = 0; i < authorsHtml.length; i++){
-			var name = authorsHtml[i].text;
-			if (!authors.includes(name))
-				authors.push(name);
-		}
-		
-		var year = dom.getElementsByTagName('u')[0].innerText.split('|')[1].split(' ')[3];
-		
-		AddBookmarks(url, title, authors, year);
-	});
-}
-
-function siamScraper(tab, url){
-	if (url.indexOf('/pdf/') == -1)
-		return;
-	
-	var pageUrl = url.replace('/pdf/', '/abs/');
-	metaParser(url, pageUrl, {
-		'titleName': 'dc.Title',
-		'authorsName': 'dc.Creator',
-		'yearName': 'dc.Date'});
-}
-
-function msrScraper(tab, url){
-	if (!url.endsWith('.pdf'))
-		return;
-	var id = getPartFromEnd(url, '/', 1);
-	var pageUrl = 'http://research.microsoft.com/apps/pubs/default.aspx?id=' + id;
-	getDom(url, pageUrl, function(dom){
-		var div = getElementByTagAndId(dom, 'div', 'pubDeTop');
-		var title = div.children[0].innerText;
-		var parts = div.children[1].innerText.split('\n');
-		var authors = parts[0].replace(', and ',', ').replace(' and ',', ').split(', ');
-		var year = getLastPart(parts[1], ' ');
-		
-		AddBookmarks(url, title, authors, year);
-	});
-}
-
-function citeseerxScraper(tab, url){
-	if (!url.endsWith('type=pdf'))
-		return;
-	var i = url.indexOf('doi=') + 4;
-	var j = url.indexOf('&', i);
-	var id = url.substr(i,j-i);
-	var pageUrl = 'http://citeseerx.ist.psu.edu/viewdoc/summary?doi=' + id;
-	
-	metaParserSingleAuthor(url, pageUrl, {'yearName': 'citation_year'});
-}
-
-function sciencedirectScraper(tab, url){
-	if (url.indexOf('main.pdf') == -1)
-		return;
-	//console.log('science');
-	var id = url.split('/')[3];
-	var pageUrl = 'http://www.sciencedirect.com/sdfe/export/[ID]/format?export-format=BIBTEX&export-content=cite';
-	pageUrl = pageUrl.replace('[ID]', id);
-	bibtexParser(url, pageUrl);
-}
-
-function springerScraper(tab, url){
-	if (url.indexOf('.pdf') == -1)
-		return;
-	url = decodeURIComponent(url);
-	var index = url.indexOf('.pdf');
-	var index2 = url.indexOf('10.');
-	var id = url.substr(index2, index-index2);
-	var pageUrl = 'http://citation-needed.services.springer.com/v2/references/[ID]?format=bibtex&flavour=citation';
-	pageUrl = pageUrl.replace('[ID]', id);
-	bibtexParser(url, pageUrl);
-}
-
-function acmScraper(tab, url){
-	if (url.indexOf('.pdf') == -1)
-		return;
-	
-	var id = url.split('/')[5];
-	var pageUrl = 'http://dl.acm.org/exportformats.cfm?id=[ID]&expformat=bibtex';
-	pageUrl = pageUrl.replace('[ID]', id);
-	bibtexParser(url, pageUrl);
 }
 
 function mlrScraper(tab, url){
@@ -205,14 +100,6 @@ function mlrScraper(tab, url){
 		console.log(bibtexString);
 		bibtexParserString(url, bibtexString);
 	});
-}
-
-function apsScraper(tab, url){
-	if (url.indexOf('/pdf/') == -1)
-		return;
-	//console.log('science');
-	var pageUrl =  url.replace('/pdf/', '/export/');
-	bibtexParser(url, pageUrl);
 }
 
 
